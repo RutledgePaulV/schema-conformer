@@ -1,17 +1,18 @@
-[![Build Status](https://travis-ci.com/vodori/schema-conformer.svg?branch=master)](https://travis-ci.com/vodori/schema-conformer) [![Maven metadata URL](https://img.shields.io/maven-metadata/v/https/repo1.maven.org/maven2/com/vodori/schema-conformer/maven-metadata.xml.svg)](https://mvnrepository.com/artifact/com.vodori/schema-conformer)
+[![Build Status](https://travis-ci.com/rutledgepaulv/schema-conformer.svg?branch=master)](https://travis-ci.com/rutledgepaulv/schema-conformer)
+[![Clojars Project](https://img.shields.io/clojars/v/org.clojars.rutledgepaulv/schema-conformer.svg)](https://clojars.org/org.clojars.rutledgepaulv/schema-conformer)
+[![codecov](https://codecov.io/gh/rutledgepaulv/schema-conformer/branch/master/graph/badge.svg)](https://codecov.io/gh/rutledgepaulv/schema-conformer)
 
 
 ### Problem
 
-We're users of [prismatic/schema](https://github.com/plumatic/schema). Schema is expressive and useful but we always 
-find ourselves using custom matchers in order to be liberal in what we accept 
-and conservative in what we send. The basic matchers bundled in Schema aren't 
-enough.
+[prismatic/schema](https://github.com/plumatic/schema) is expressive and useful but you
+need custom matchers in order to be liberal in what you accept and conservative in what 
+you send. The basic matchers bundled in Schema aren't enough.
 
 ### Installation 
 
 ```clojure
-[com.vodori/schema-conformer "0.1.2"]
+[org.clojars.rutledgepaulv/schema-conformer "0.1.2"]
 ```
 
 ### Usage
@@ -93,11 +94,6 @@ If joda time is on your classpath:
 
 - Converting org.joda.time.DateTime to ISO strings
 - Converting ISO strings to org.joda.time.DateTime
-
-If mongodb is on your classpath:
-
-- Converting org.bson.types.ObjectId to strings
-- Converting strings to org.bson.types.ObjectId
 
 ___
 

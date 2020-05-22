@@ -13,14 +13,18 @@
            (java.time Instant)
            (schema.experimental.abstract_map AbstractSchema SchemaExtension)))
 
+; allow strings as implicit required keys
+(defonce PATCHES
+  (do (alter-var-root #'s/required-key?
+        (fn [old] (fn [ks] (or (string? ks) (old ks)))))
+      (alter-var-root #'s/explicit-schema-key
+        (fn [old] (fn [ks] (if (string? ks) ks (old ks)))))))
+
 (defn date-time-schema? [s]
   (and (class? s) (= "org.joda.time.DateTime" (.getName ^Class s))))
 
 (defn instant-schema? [s]
   (and (class? s) (= "java.time.Instant" (.getName ^Class s))))
-
-(defn object-id-schema? [s]
-  (and (class? s) (= "org.bson.types.ObjectId" (.getName ^Class s))))
 
 (defn within-range [start stop]
   (let [pred (fn [x] (<= start x stop))]
@@ -48,9 +52,6 @@
 
 (defn instant? [v]
   (instant-schema? (class v)))
-
-(defn object-id? [v]
-  (object-id-schema? (class v)))
 
 (defn string->uuid [s]
   (UUID/fromString s))
@@ -99,12 +100,6 @@
 (defn extension? [s]
   (instance? SchemaExtension s))
 
-(defn object-id->string [o]
-  (.toHexString o))
-
-(defn string->object-id [s]
-  (construct "org.bson.types.ObjectId" s))
-
 (defn optional-key? [s]
   (instance? OptionalKey s))
 
@@ -132,6 +127,31 @@
     (or (instance? EnumSchema schema))
     (sets/union (set (:ks schema)))))
 
+(defn coerce-close-keys [m allowed-keys]
+  (letfn [(fun [m' k]
+            (cond
+              (contains? m' k)
+              m'
+              (and (keyword? k) (contains? m' (name k)))
+              (-> m'
+                  (assoc (keyword k) (get m' (name k)))
+                  (dissoc (name k)))
+              (and (string? k) (contains? m' (keyword k)))
+              (-> m'
+                  (assoc (name k) (get m' (keyword k)))
+                  (dissoc (keyword k)))
+              (and (keyword? k) (contains? m' (symbol k)))
+              (-> m'
+                  (assoc (keyword k) (get m' (symbol k)))
+                  (dissoc (symbol k)))
+              (and (string? k) (contains? m' (symbol k)))
+              (-> m'
+                  (assoc (name k) (get m' (symbol k)))
+                  (dissoc (symbol k)))
+              :otherwise
+              (assoc m' k nil)))]
+    (reduce fun m allowed-keys)))
+
 (defn ensure-required-keys [m required]
   (reduce (fn [m' k] (update m' k identity)) m required))
 
@@ -142,10 +162,13 @@
   (reduce-kv (fn [m' k v] (if (and (contains? optional k) (nil? v)) (dissoc m' k) m')) m m))
 
 (defn align-map-keys [schema x]
-  (let [optional-keys  (set (mapcat get-optional-keys (keys schema)))
-        required-keys  (set (mapcat get-required-keys (keys schema)))
+  (let [ks             (keys schema)
+        optional-keys  (set (mapcat get-optional-keys ks))
+        required-keys  (set (mapcat get-required-keys ks))
         available-keys (sets/union optional-keys required-keys)]
     (cond-> x
+      :always
+      (coerce-close-keys available-keys)
       :always
       (ensure-required-keys required-keys)
       (not (allow-arbitrary-keys? schema))
@@ -234,8 +257,7 @@
      {:key :symbol->string :default true :value? symbol? :transform (lift name)}
      {:key :uuid->string :default true :value? uuid? :transform (lift str)}
      {:key :datetime->string :default true :value? date-time? :transform (lift datetime->string)}
-     {:key :instant->string :default true :value? instant? :transform (lift str)}
-     {:key :object-id->string :default true :value? object-id? :transform (lift object-id->string)}]]
+     {:key :instant->string :default true :value? instant? :transform (lift str)}]]
    [keyword-schema?
     [{:key :string->keyword :default true :value? string? :transform (lift keyword)}
      {:key :symbol->keyword :default true :value? symbol? :transform (lift keyword)}]]
@@ -273,8 +295,6 @@
    [instant-schema?
     [{:key :string->instant :default true :value? string? :transform (lift string->instant)}
      {:key :integer->instant :default true :value? integer? :transform (lift number->instant)}]]
-   [object-id-schema?
-    [{:key :string->object-id :default true :value? string? :transform (lift string->object-id)}]]
    [symbol-schema?
     [{:key :keyword->symbol :default true :value? keyword? :transform (lift symbol)}
      {:key :string->symbol :default true :value? string? :transform (lift symbol)}]]])

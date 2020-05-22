@@ -58,6 +58,29 @@
   (verify-option :nil->vector [s/Str] [] nil)
   (verify-option :number->boolean s/Bool false 0))
 
+(deftest map-key-coercions
+  (let [data   {"test" 1}
+        schema {(s/optional-key :test) s/Int}]
+    (is (= {:test 1} (conform schema data))))
+  (let [data   {:test 1}
+        schema {(s/optional-key "test") s/Int}]
+    (is (= {"test" 1} (conform schema data))))
+  (let [data   {:test 1}
+        schema {"test" s/Int}]
+    (is (= {"test" 1} (conform schema data))))
+  (let [data   {}
+        schema {"test" (s/maybe s/Int)}]
+    (is (= {"test" nil} (conform schema data))))
+  (let [data   {}
+        schema {(s/required-key "test") (s/maybe s/Int)}]
+    (is (= {"test" nil} (conform schema data))))
+  (let [data   {:test 1}
+        schema {(s/required-key "test") (s/maybe s/Int)}]
+    (is (= {"test" 1} (conform schema data))))
+  (let [data   {"test" 1}
+        schema {"cats" [s/Str] s/Keyword s/Int}]
+    (is (= {"cats" [], :test 1} (conform schema data)))))
+
 
 (deftest deep-merge-test
   (let [a      (s/constrained {:a s/Str} #(= (:a %) "test") "a-equals-test?")
