@@ -12,7 +12,7 @@ you send. The basic matchers bundled in Schema aren't enough.
 ### Installation 
 
 ```clojure
-[org.clojars.rutledgepaulv/schema-conformer "0.1.2"]
+[org.clojars.rutledgepaulv/schema-conformer "0.1.3"]
 ```
 
 ### Usage
