@@ -1,4 +1,4 @@
-(defproject org.clojars.rutledgepaulv/schema-conformer "0.1.3"
+(defproject org.clojars.rutledgepaulv/schema-conformer "0.1.4-SNAPSHOT"
 
   :description
   "A library for configurable conforming of data according to prismatic schemas."
